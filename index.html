@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My village</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        width: 60%;
+        height: 60%;
+      }
+    </style>
+    <link
+      href="https://fonts.googleapis.com/css?family=BioRhyme"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/village.css" />
+  </head>
+
+  <style type="text/css">
+    .menu {
+      width: 150px;
+      background: #000;
+      color: #fff;
+      position: absolute;
+      z-index: 999999;
+      display: none;
+      box-shadow: 0 0 10px #713c3c;
+    }
+
+    .menu ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .menu ul a {
+      text-decoration: none;
+    }
+
+    .menu ul li {
+      width: 88%;
+      padding: 6%;
+      background-color: #f04d44;
+      color: #fff;
+    }
+
+    .menu ul li:hover {
+      background-color: #f7ba4b;
+      color: #444343;
+    }
+  </style>
+
+  <script src="js/jquery.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('html').on('contextmenu', function(e) {
+        e.preventDefault();
+        var menu = $('.menu');
+
+        menu.hide();
+
+        var pageX = e.pageX;
+        var pageY = e.pageY;
+
+        menu.css({ top: pageY, left: pageX });
+
+        var mwidth = menu.width();
+        var mheight = menu.height();
+        var screenWidth = $(window).width();
+        var screenHeight = $(window).height();
+
+        var scrTop = $(window).scrollTop();
+
+        if (pageX + mwidth > screenWidth) {
+          menu.css({ left: pageX - mwidth });
+        }
+
+        if (pageY + mheight > screenHeight + scrTop) {
+          menu.css({ top: pageY - mheight });
+        }
+
+        menu.show();
+      });
+
+      $('html').on('click', function() {
+        $('.menu').hide();
+      });
+    });
+  </script>
+
+  <body>
+    <div class="menu">
+      <ul>
+        <a id="myLink" href="#" onclick="toggleRotation();"
+          ><li>->Toggle rotation</li></a
+        >
+        <a id="myLink" href="#" onclick="toggleDirection();"
+          ><li>->Toggle direction</li></a
+        >
+        <a id="myLink" href="#" onclick="zoomOut();"><li>->Zoom out</li></a>
+        <a id="myLink" href="#" onclick="zoomIn();"><li>->Zoom in</li></a>
+        <a id="myLink" href="#" onclick="myFunctionDay();"
+          ><li>->Toggle Day/Night</li></a
+        >
+        <a id="myLink" href="#" onclick="closeWin();"><li>->Close</li></a>
+      </ul>
+    </div>
+
+    <button onclick="toggleRotation()" class="rotateButton">
+      Toggle rotation
+    </button>
+    <button onclick="toggleDirection()" class="directionButton">
+      Toggle direction
+    </button>
+    <button onclick="myFunctionDay()" class="dayButton">
+      Toggle Day/Night
+    </button>
+
+    <div class="slider-div">
+      <br />Rotation speed<br /><input
+        id="RotationSpeed"
+        type="range"
+        min="0"
+        max="10"
+        step="1"
+        value="1"
+        class="rotateSlider"
+      />
+      <br />Zoom <br /><input
+        id="Zoom"
+        type="range"
+        min="1"
+        max="3"
+        step="0.01"
+        value="1"
+        class="zoomSlider"
+      />
+    </div>
+
+    <script src="js/three.js"></script>
+    <script>
+      var rotate = true;
+      var Direction = 1;
+      var rotationSpeedVal = 1;
+      var zoom = 1;
+      var day = true;
+
+      window.onload = function init() {
+        document.getElementById('RotationSpeed').onchange = function(event) {
+          rotationSpeedVal = parseInt(event.target.value);
+        };
+      };
+
+      document.getElementById('Zoom').onchange = function(event) {
+        zoom = event.target.value;
+      };
+
+      function zoomOut() {
+        if (zoom > 1) {
+          zoom = zoom - 1;
+        }
+        document.getElementById('Zoom').value = zoom;
+      }
+
+      function zoomIn() {
+        if (zoom < 3) {
+          zoom = zoom + 1;
+        }
+        document.getElementById('Zoom').value = zoom;
+      }
+
+      function myFunctionDay() {
+        day = !day;
+        if (day) {
+          sphere.material.color.setHex(0xffffff);
+        } else {
+          sphere.material.color.setHex(0x333333);
+        }
+      }
+
+      function closeWin() {
+        var win = window.open('about:blank', '_self');
+        win.close();
+      }
+
+      function toggleRotation() {
+        rotate = !rotate;
+      }
+
+      function toggleDirection() {
+        Direction = Direction * -1;
+      }
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      var renderer = new THREE.WebGLRenderer();
+
+      renderer.setSize(window.innerWidth, window.innerHeight - 50);
+      document.body.appendChild(renderer.domElement);
+
+      group = new THREE.Object3D();
+
+      var planeGeometry = new THREE.PlaneGeometry(50, 50);
+      var planeMaterial = new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('pics/grass.jpg')
+      });
+      var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+
+      plane.rotation.x = -0.5 * Math.PI;
+      plane.position.x = 15;
+      plane.position.y = 0;
+      plane.position.z = 0;
+
+      group.add(plane);
+
+      var geometry = new THREE.CylinderGeometry(3, 3, 5, 100, 20);
+      var material = new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('pics/hut.jpg')
+      });
+      var cylinder = new THREE.Mesh(geometry, material);
+
+      cylinder.position.x = 6;
+      cylinder.position.y = 2;
+      cylinder.position.z = 1;
+
+      group.add(cylinder);
+
+      var conegeometry = new THREE.CylinderGeometry(1, 3, 2, 1000, 2);
+      var conematerial = new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('pics/roof.jpg')
+      });
+      var cone = new THREE.Mesh(conegeometry, conematerial);
+
+      cone.position.x = 6;
+      cone.position.y = 6;
+      cone.position.z = 1;
+
+      group.add(cone);
+
+      var sphereGeometry = new THREE.SphereGeometry(
+        3,
+        100,
+        100,
+        Math.PI,
+        Math.PI,
+        (3 * Math.PI) / 2
+      );
+      var sphereMaterial = new THREE.MeshBasicMaterial({
+        map: THREE.ImageUtils.loadTexture('pics/igloo.jpg')
+      });
+      var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+      sphere.material.side = THREE.DoubleSide;
+
+      sphere.position.x = 14;
+      sphere.position.y = 0.2;
+      sphere.position.z = 7;
+
+      group.add(sphere);
+
+      var pondGeometry = new THREE.CircleGeometry(6, 95);
+      var pondMaterial = new THREE.MeshPhongMaterial({
+        map: THREE.ImageUtils.loadTexture('pics/pond.jpeg')
+      });
+
+      var pond = new THREE.Mesh(pondGeometry, pondMaterial);
+      pond.rotation.x = -Math.PI / 2;
+
+      pond.position.x = 18;
+      pond.position.y = 0.1;
+      pond.position.z = -3;
+
+      group.add(pond);
+
+      var dayLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+
+      var nightLight = new THREE.SpotLight(0xcc622d, 2.5, 200, 0.71, 0.334);
+      nightLight.position.set(-61, 60, -10);
+
+      scene.add(group);
+
+      camera.position.x = -30;
+      camera.position.y = 40;
+      camera.position.z = 30;
+      camera.lookAt(scene.position);
+
+      function render() {
+        requestAnimationFrame(render);
+        if (rotate) {
+          if (Direction > 0) {
+            group.rotation.y += 0.01 * rotationSpeedVal;
+          } else {
+            group.rotation.y -= 0.01 * rotationSpeedVal;
+          }
+        }
+
+        if (zoom < 1) zoom = 1;
+
+        if (zoom > 3) zoom = 3;
+
+        camera.zoom = zoom;
+
+        camera.updateProjectionMatrix();
+
+        if (day) {
+          scene.remove(nightLight);
+          scene.add(dayLight);
+          scene.add(hemiLight);
+        } else {
+          scene.remove(dayLight);
+          scene.remove(hemiLight);
+          scene.add(nightLight);
+        }
+
+        if (day) {
+          renderer.setClearColor('skyblue', 1.5);
+        } else {
+          renderer.setClearColor('skyblue', 0.1);
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      render();
+    </script>
+  </body>
+</html>
